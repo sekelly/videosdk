@@ -7,8 +7,8 @@ let audioEncode
 
 // setup your signature endpoint here: https://github.com/zoom/videosdk-sample-signature-node.js
 let signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest'
-let sessionName = 'magaoay'
-let sessionPasscode = '123'
+let sessionName = ''
+let sessionPasscode = ''
 let userName = 'Participant' + Math.floor(Math.random() * 100)
 let role = 1
 let userIdentity
