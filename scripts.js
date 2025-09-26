@@ -13,6 +13,8 @@ let userName = 'Participant' + Math.floor(Math.random() * 100)
 let role = 1
 let userIdentity
 let sessionKey
+let cloud_recording_option: 1,
+let cloud_recording_transcript_option: 2
 
 zmClient.init('US-en', 'CDN')
 
