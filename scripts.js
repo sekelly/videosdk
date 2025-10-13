@@ -105,10 +105,8 @@ function startVideo() {
   startButton.textContent = 'Starting Video...';
   startButton.disabled = true;
 
-  // Start local video (no videoElement argument)
   zmStream.startVideo({ mirrored: true, hd: true })
     .then(() => {
-      // Render the local user's video on the canvas
       const canvas = document.querySelector('#self-view-canvas');
       const userId = zmClient.getCurrentUserInfo().userId;
 
@@ -135,6 +133,7 @@ function startVideo() {
       startButton.disabled = false;
     });
 }
+
 
 
 function stopVideo() {
