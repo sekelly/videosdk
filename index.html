@@ -1,105 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zoom Video SDK Test</title>
-  <style>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Video SDK JS 2.2.12</title>
+    <link rel="stylesheet" href="styles.css">
+    <meta http-equiv="origin-trial" content="AkBC6T2NnosY6N71LXXA09Q1GMiLzuHuOKpC9SwfbPxzoxr2PMOM2uHZmAxIFqq+dCvUD/4kPoylRZ4G5YCkow8AAAB7eyJvcmlnaW4iOiJodHRwczovL3Nla2VsbHkuZ2l0aHViLmlvOjQ0MyIsImZlYXR1cmUiOiJVbnJlc3RyaWN0ZWRTaGFyZWRBcnJheUJ1ZmZlciIsImV4cGlyeSI6MTcwOTg1NTk5OSwiaXNTdWJkb21haW4iOnRydWV9" />
+  </head>
+    <style>
     body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    #session {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .video-container {
-      width: 640px;
-      height: 360px;
-      background: #000;
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    #self-view-name,
-    #participant-name {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      color: white;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* removes black bars */
-    }
-
-    button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: #007bff;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:disabled {
-      background: #555;
+       background-color: rgb(167, 173, 177);
+       background-image: url("https://zoom.us/account/branding/p/b7f37763-6dee-4be3-8c55-cda5ba5c7310.gif");
     }
   </style>
-</head>
+  <body>
+    <main>
+      <div id="landing">
+        <h2> Video WebSDK 2.2.12 💬</h2>
+        <small id="error">Session full, join another.</small>
+        <input type="text" placeholder="😃 Enter Name" id="userName">
+        <input type="text" placeholder="🚪 Session Name" id="sessionName">
+        <input type="text" placeholder="🔑 Session Passcode" id="sessionPasscode">
+        <button onClick="getSignature()" class="primary" id="getSignature">Join Session</button>
+        <small class="zoom">Powered by the <a href="https://marketplace.zoom.us/docs/sdk/video/introduction/" target="_blank">Zoom Video SDK</a></small>
+      </div>
 
-<body>
-  <div id="landing">
-    <h2>Join Zoom Video SDK Session</h2>
-    <input id="sessionName" placeholder="Session Name" />
-    <input id="userName" placeholder="Your Name" />
-    <input id="sessionPasscode" placeholder="Session Passcode" />
-    <button id="getSignature">Join Session</button>
-    <p id="error" style="display:none;color:red;">Session full or error joining.</p>
-  </div>
+      <div id="session">
+        <div class="self">
+          <h3 id="self-view-name">😃 Me</h3>
+          <video id="self-view-video" width="1920" height="1080"></video>
+          <canvas id="self-view-canvas" width="1920" height="1080"></canvas>
+        </div>
+        <div class="participant">
+          <h3 id="participant-name">⏳ Waiting for participant to join...</h3>
+          <canvas id="participant-canvas" width="1920" height="1080"></canvas>
+        </div>
 
-  <div id="session">
-    <div class="video-container" id="self-view-container">
-      <div id="self-view-name">Self View</div>
-      <video id="self-view-video" autoplay muted></video>
-    </div>
+        <div class="controls">
 
-    <div class="video-container" id="participant-container">
-      <div id="participant-name">⏳ Waiting for participant to join...</div>
-      <video id="participant-video" autoplay></video>
-    </div>
+          <button onClick="startAudio()" class="primary" id="startAudio">Start Audio</button>
+          <button onClick="muteAudio()" class="primary" id="muteAudio">Mute</button>
+          <button onClick="unmuteAudio()" class="primary" id="unmuteAudio">Unmute</button>
 
-    <div style="margin-top: 1rem;">
-      <button id="startVideo">Start Video</button>
-      <button id="stopVideo" style="display:none;">Stop Video</button>
-      <button id="startAudio">Start Audio</button>
-      <button id="muteAudio" style="display:none;">Mute</button>
-      <button id="unmuteAudio" style="display:none;">Unmute</button>
-      <button id="leave">Leave</button>
-    </div>
-  </div>
+          <button onClick="startVideo()" class="primary" id="startVideo">Start Video</button>
+          <button onClick="stopVideo()" class="primary" id="stopVideo">Stop Video</button>
 
-  <script src="https://source.zoom.us/videosdk/2.2.12/lib.js"></script>
-  <script src="./scripts.js"></script>
-</body>
+          <button onClick="leaveSession()" class="leave" id="leaveSession">Leave Session</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://source.zoom.us/videosdk/zoom-video-2.2.12.min.js"></script>
+    <script type="text/javascript" src="scripts.js"></script>
+  </body>
 </html>
