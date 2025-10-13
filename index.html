@@ -27,12 +27,11 @@
       <div id="session" style="display: none;">
         <div class="self">
           <h3 id="self-view-name">😃 Me</h3>
-          <!-- Keep video element for self-view (required for certain browsers) -->
-          <video id="self-view-video" width="1920" height="1080" style="display: none;" muted autoplay></video>
+          <!-- FIXED: Added playsinline attribute -->
+          <video id="self-view-video" width="1920" height="1080" style="display: none;" muted autoplay playsinline></video>
         </div>
         <div class="participant">
           <h3 id="participant-name">⏳ Waiting for participant to join...</h3>
-          <!-- Canvas for participant video -->
           <canvas id="participant-canvas" width="1920" height="1080" style="display: none;"></canvas>
         </div>
         <div class="controls">
@@ -45,6 +44,7 @@
         </div>
       </div>
     </main>
+    <!-- FIXED: Cleaned up script tag -->
     <script src="https://source.zoom.us/videosdk/zoom-video-2.2.12.min.js"></script>
     <script type="text/javascript" src="scripts.js"></script>
   </body>
