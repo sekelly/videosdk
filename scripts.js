@@ -56,7 +56,7 @@ function joinSession(signature) {
   })
 }
 
-// FIXED: Updated startVideo function with proper element checking
+// FIXED: Use renderVideo with video element for self-view
 function startVideo() {
   document.querySelector('#startVideo').textContent = 'Starting Video...'
   document.querySelector('#startVideo').disabled = true
@@ -72,13 +72,17 @@ function startVideo() {
   
   console.log('Video element found:', videoElement)
   
-  // Start video without videoElement option (this removes the deprecation warning)
+  // Start video without videoElement option (removes deprecation warning)
   zmStream.startVideo({ mirrored: true, hd: true }).then(() => {
-    console.log('Video started, now attaching to element...')
+    console.log('Video started, now rendering to video element...')
     
-    // Use attachVideo for self-view (required for certain browsers)
-    zmStream.attachVideo(zmClient.getCurrentUserInfo().userId, videoElement).then(() => {
-      console.log('Video attached successfully')
+    // Use renderVideo with video element for self-view (works on all browsers)
+    zmStream.renderVideo(
+      videoElement, 
+      zmClient.getCurrentUserInfo().userId, 
+      1920, 1080, 0, 0, 3
+    ).then(() => {
+      console.log('Video rendered successfully to video element')
       videoElement.style.display = 'block'
       document.querySelector('#self-view-name').style.display = 'none'
       document.querySelector('#startVideo').style.display = 'none'
@@ -86,7 +90,7 @@ function startVideo() {
       document.querySelector('#startVideo').textContent = 'Start Video'
       document.querySelector('#startVideo').disabled = false
     }).catch((error) => {
-      console.error('Error attaching video:', error)
+      console.error('Error rendering video to video element:', error)
       document.querySelector('#startVideo').textContent = 'Start Video'
       document.querySelector('#startVideo').disabled = false
     })
@@ -97,7 +101,7 @@ function startVideo() {
   })
 }
 
-// FIXED: Updated stopVideo function with proper error handling
+// FIXED: Updated stopVideo function
 function stopVideo() {
   const videoElement = document.querySelector('#self-view-video')
   
@@ -106,17 +110,17 @@ function stopVideo() {
     return
   }
   
-  // Detach video before stopping
-  zmStream.detachVideo(zmClient.getCurrentUserInfo().userId).then(() => {
-    console.log('Video detached successfully')
+  // Stop rendering video before stopping video stream
+  zmStream.stopRenderVideo(videoElement, zmClient.getCurrentUserInfo().userId).then(() => {
+    console.log('Video rendering stopped successfully')
     zmStream.stopVideo()
     videoElement.style.display = 'none'
     document.querySelector('#self-view-name').style.display = 'block'
     document.querySelector('#startVideo').style.display = 'inline-block'
     document.querySelector('#stopVideo').style.display = 'none'
   }).catch((error) => {
-    console.error('Error detaching video:', error)
-    // Fallback: still stop video even if detach fails
+    console.error('Error stopping video rendering:', error)
+    // Fallback: still stop video even if stopRenderVideo fails
     zmStream.stopVideo()
     videoElement.style.display = 'none'
     document.querySelector('#self-view-name').style.display = 'block'
