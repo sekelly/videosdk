@@ -6,7 +6,7 @@ let audioDecode;
 let audioEncode;
 
 // setup your signature endpoint here: https://github.com/zoom/videosdk-sample-signature-node.js
-let signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest';
+/*let signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest';
 let sessionName = '';
 let sessionPasscode = '';
 let userName = 'Participant' + Math.floor(Math.random() * 100);
@@ -31,6 +31,34 @@ function getSignature() {
       sessionKey,
     }),
   })
+    .then((response) => response.json())
+    .then((data) => joinSession(data.signature))
+    .catch((error) => console.error(error));
+}*/
+// scripts.js
+const signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest';
+let sessionName = '';
+let sessionPasscode = '';
+let userName = 'Participant' + Math.floor(Math.random() * 100);
+let role = 1;
+let userIdentity;
+let sessionKey;
+
+function getSignature() {
+    document.querySelector('#getSignature').textContent = 'Joining Session...';
+    document.querySelector('#getSignature').disabled = true;
+    document.querySelector('#error').style.display = 'none';
+
+    fetch(signatureEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            sessionName: document.getElementById('sessionName').value || sessionName,
+            role: role,
+            userIdentity: userIdentity,
+            sessionKey: sessionKey
+        }),
+    })
     .then((response) => response.json())
     .then((data) => joinSession(data.signature))
     .catch((error) => console.error(error));
