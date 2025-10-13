@@ -110,7 +110,7 @@ function startVideo() {
       const canvas = document.querySelector('#self-view-canvas');
       const userId = zmClient.getCurrentUserInfo().userId;
 
-      zmStream.renderVideo(canvas, userId, 1920, 1080, 0, 0, 3)
+      zmStream.renderVideo(canvas, userId, 1920, 1080, 0, 0, 2)
         .then(() => {
           canvas.style.display = 'block';
           document.querySelector('#self-view-name').style.display = 'none';
