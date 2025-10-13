@@ -56,7 +56,7 @@ function joinSession(signature) {
   })
 }
 
-// FIXED: Use renderVideo with video element for self-view
+// FIXED: Use attachVideo as recommended by SDK
 function startVideo() {
   document.querySelector('#startVideo').textContent = 'Starting Video...'
   document.querySelector('#startVideo').disabled = true
@@ -71,29 +71,47 @@ function startVideo() {
   }
   
   console.log('Video element found:', videoElement)
+  console.log('Current user info:', zmClient.getCurrentUserInfo())
   
   // Start video without videoElement option (removes deprecation warning)
   zmStream.startVideo({ mirrored: true, hd: true }).then(() => {
-    console.log('Video started, now rendering to video element...')
+    console.log('Video started, now attaching to video element...')
     
-    // Use renderVideo with video element for self-view (works on all browsers)
-    zmStream.renderVideo(
-      videoElement, 
-      zmClient.getCurrentUserInfo().userId, 
-      1920, 1080, 0, 0, 3
-    ).then(() => {
-      console.log('Video rendered successfully to video element')
-      videoElement.style.display = 'block'
-      document.querySelector('#self-view-name').style.display = 'none'
-      document.querySelector('#startVideo').style.display = 'none'
-      document.querySelector('#stopVideo').style.display = 'inline-block'
-      document.querySelector('#startVideo').textContent = 'Start Video'
-      document.querySelector('#startVideo').disabled = false
-    }).catch((error) => {
-      console.error('Error rendering video to video element:', error)
-      document.querySelector('#startVideo').textContent = 'Start Video'
-      document.querySelector('#startVideo').disabled = false
-    })
+    // Small delay to ensure video stream is ready
+    setTimeout(() => {
+      // Use attachVideo as recommended by the SDK
+      zmStream.attachVideo(zmClient.getCurrentUserInfo().userId, videoElement).then(() => {
+        console.log('Video attached successfully')
+        
+        // Force video element to be visible and play
+        videoElement.style.display = 'block'
+        videoElement.style.width = '100%'
+        videoElement.style.height = 'auto'
+        videoElement.style.maxWidth = '400px' // Reasonable size for testing
+        
+        // Ensure video plays
+        videoElement.play().catch(e => console.log('Video play error (might be normal):', e))
+        
+        document.querySelector('#self-view-name').style.display = 'none'
+        document.querySelector('#startVideo').style.display = 'none'
+        document.querySelector('#stopVideo').style.display = 'inline-block'
+        document.querySelector('#startVideo').textContent = 'Start Video'
+        document.querySelector('#startVideo').disabled = false
+        
+        console.log('Video element properties:', {
+          videoWidth: videoElement.videoWidth,
+          videoHeight: videoElement.videoHeight,
+          readyState: videoElement.readyState,
+          paused: videoElement.paused
+        })
+        
+      }).catch((error) => {
+        console.error('Error attaching video:', error)
+        document.querySelector('#startVideo').textContent = 'Start Video'
+        document.querySelector('#startVideo').disabled = false
+      })
+    }, 500) // 500ms delay
+    
   }).catch((error) => {
     console.error('Error starting video:', error)
     document.querySelector('#startVideo').textContent = 'Start Video'
@@ -110,17 +128,17 @@ function stopVideo() {
     return
   }
   
-  // Stop rendering video before stopping video stream
-  zmStream.stopRenderVideo(videoElement, zmClient.getCurrentUserInfo().userId).then(() => {
-    console.log('Video rendering stopped successfully')
+  // Detach video before stopping
+  zmStream.detachVideo(zmClient.getCurrentUserInfo().userId).then(() => {
+    console.log('Video detached successfully')
     zmStream.stopVideo()
     videoElement.style.display = 'none'
     document.querySelector('#self-view-name').style.display = 'block'
     document.querySelector('#startVideo').style.display = 'inline-block'
     document.querySelector('#stopVideo').style.display = 'none'
   }).catch((error) => {
-    console.error('Error stopping video rendering:', error)
-    // Fallback: still stop video even if stopRenderVideo fails
+    console.error('Error detaching video:', error)
+    // Fallback: still stop video even if detach fails
     zmStream.stopVideo()
     videoElement.style.display = 'none'
     document.querySelector('#self-view-name').style.display = 'block'
@@ -215,7 +233,7 @@ zmClient.on('peer-video-state-change', (payload) => {
     }
   }
   interval = setInterval(ifZmStream, 1000)
-})
+}
 
 zmClient.on('user-added', (payload) => {
   if(zmClient.getAllUser().length < 3) {
