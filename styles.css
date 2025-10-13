@@ -39,6 +39,22 @@ small#error {
 video, #self-view-canvas {
   border-radius: 20px;
 }
+#self-view-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background-color: black;
+}
+
+#self-view-container {
+  overflow: hidden;
+  aspect-ratio: 16 / 9; /* adjust if needed */
+  width: 100%;
+  max-width: 640px;
+  margin: auto;
+  border-radius: 8px;
+}
+
 
 input {
   border-radius: 20px;
