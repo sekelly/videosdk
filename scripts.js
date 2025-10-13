@@ -1,18 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-  if (!window.WebVideoSDK) {
-    console.error('Zoom Video SDK not loaded!');
-    return;
-  }
-
-  const VideoSDK = window.WebVideoSDK.default;
-
-  let zmClient = VideoSDK.createClient();
-  let zmStream;
-  let audioDecode;
-  let audioEncode;
-
-  // your existing code goes here...
-
 const VideoSDK = window.WebVideoSDK.default;
 
 let zmClient = VideoSDK.createClient();
@@ -236,4 +221,3 @@ zmClient.on('user-removed', (payload) => {
 });
 
 zmClient.on('active-share-change', (payload) => console.log(payload));
-  });
