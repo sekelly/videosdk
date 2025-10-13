@@ -56,15 +56,16 @@ function joinSession(signature) {
   })
 }
 
-// FIXED: Updated startVideo function to remove deprecated videoElement
+// FIXED: Updated startVideo function to use attachVideo for self-view
 function startVideo() {
   document.querySelector('#startVideo').textContent = 'Starting Video...'
   document.querySelector('#startVideo').disabled = true
   
-  // Use only renderVideo method (no more videoElement option)
+  // Start video without videoElement option (this removes the deprecation warning)
   zmStream.startVideo({ mirrored: true, hd: true }).then(() => {
-    zmStream.renderVideo(document.querySelector('#self-view-canvas'), zmClient.getCurrentUserInfo().userId, 1920, 1080, 0, 0, 3).then(() => {
-      document.querySelector('#self-view-canvas').style.display = 'block'
+    // Use attachVideo for self-view (required for certain browsers)
+    zmStream.attachVideo(zmClient.getCurrentUserInfo().userId, document.querySelector('#self-view-video')).then(() => {
+      document.querySelector('#self-view-video').style.display = 'block'
       document.querySelector('#self-view-name').style.display = 'none'
       document.querySelector('#startVideo').style.display = 'none'
       document.querySelector('#stopVideo').style.display = 'inline-block'
@@ -78,14 +79,24 @@ function startVideo() {
   })
 }
 
-// FIXED: Updated stopVideo function to only handle canvas
+// FIXED: Updated stopVideo function
 function stopVideo() {
-  zmStream.stopVideo()
-  document.querySelector('#self-view-canvas').style.display = 'none'
-  // Removed: document.querySelector('#self-view-video').style.display = 'none'
-  document.querySelector('#self-view-name').style.display = 'block'
-  document.querySelector('#startVideo').style.display = 'inline-block'
-  document.querySelector('#stopVideo').style.display = 'none'
+  // Detach video before stopping
+  zmStream.detachVideo(zmClient.getCurrentUserInfo().userId).then(() => {
+    zmStream.stopVideo()
+    document.querySelector('#self-view-video').style.display = 'none'
+    document.querySelector('#self-view-name').style.display = 'block'
+    document.querySelector('#startVideo').style.display = 'inline-block'
+    document.querySelector('#stopVideo').style.display = 'none'
+  }).catch((error) => {
+    console.log(error)
+    // Fallback: still stop video even if detach fails
+    zmStream.stopVideo()
+    document.querySelector('#self-view-video').style.display = 'none'
+    document.querySelector('#self-view-name').style.display = 'block'
+    document.querySelector('#startVideo').style.display = 'inline-block'
+    document.querySelector('#stopVideo').style.display = 'none'
+  })
 }
 
 function startAudio() {
@@ -119,16 +130,15 @@ function unmuteAudio() {
   document.querySelector('#unmuteAudio').style.display = 'none'
 }
 
-// FIXED: Updated leaveSession to only handle canvas
+// FIXED: Updated leaveSession function
 function leaveSession() {
   zmClient.leave()
   document.querySelector('#session').style.display = 'none'
   document.querySelector('#muteAudio').style.display = 'none'
   document.querySelector('#unmuteAudio').style.display = 'none'
   document.querySelector('#stopVideo').style.display = 'none'
-  // Removed: document.querySelector('#self-view-video').style.display = 'none'
+  document.querySelector('#self-view-video').style.display = 'none'
   document.querySelector('#participant-canvas').style.display = 'none'
-  document.querySelector('#self-view-canvas').style.display = 'none'
   document.querySelector('#startVideo').style.display = 'inline-block'
   document.querySelector('#startAudio').style.display = 'inline-block'
   document.querySelector('#self-view-name').style.display = 'block'
