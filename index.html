@@ -15,7 +15,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      height: 100vh;
     }
 
     #session {
@@ -44,14 +44,6 @@
       padding: 2px 8px;
       border-radius: 6px;
       font-size: 14px;
-      z-index: 10;
-    }
-
-    input {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: none;
-      margin: 4px;
     }
 
     button {
@@ -62,7 +54,6 @@
       color: white;
       cursor: pointer;
       font-weight: bold;
-      margin: 4px;
     }
 
     button:disabled {
@@ -70,6 +61,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="landing">
     <h2>Join Zoom Video SDK Session</h2>
@@ -101,7 +93,9 @@
 
   <!-- Zoom Video SDK -->
   <script src="https://source.zoom.us/videosdk/2.2.12/lib.js"></script>
-  <!-- Your JS -->
+
+  <!-- Custom JS -->
   <script src="./scripts.js"></script>
 </body>
 </html>
+
