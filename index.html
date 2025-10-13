@@ -44,6 +44,7 @@
       padding: 2px 8px;
       border-radius: 6px;
       font-size: 14px;
+      pointer-events: none;
     }
 
     button {
@@ -54,24 +55,35 @@
       color: white;
       cursor: pointer;
       font-weight: bold;
+      margin: 0 4px;
     }
 
     button:disabled {
       background: #555;
+      cursor: not-allowed;
+    }
+
+    input {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      margin: 0 4px 8px 0;
     }
   </style>
 </head>
 
 <body>
+  <!-- Landing / Join form -->
   <div id="landing">
     <h2>Join Zoom Video SDK Session</h2>
     <input id="sessionName" placeholder="Session Name" />
     <input id="userName" placeholder="Your Name" />
     <input id="sessionPasscode" placeholder="Session Passcode" />
-    <button id="getSignature" onclick="getSignature()">Join Session</button>
+    <button id="getSignature">Join Session</button>
     <p id="error" style="display:none;color:red;">Session full or error joining.</p>
   </div>
 
+  <!-- Session UI -->
   <div id="session">
     <div class="video-container" id="self-view-container">
       <div id="self-view-name">Self View</div>
@@ -82,17 +94,29 @@
     </div>
 
     <div style="margin-top: 1rem;">
-      <button id="startVideo" onclick="startVideo()">Start Video</button>
-      <button id="stopVideo" onclick="stopVideo()" style="display:none;">Stop Video</button>
-      <button id="startAudio" onclick="startAudio()">Start Audio</button>
-      <button id="muteAudio" onclick="muteAudio()" style="display:none;">Mute</button>
-      <button id="unmuteAudio" onclick="unmuteAudio()" style="display:none;">Unmute</button>
-      <button id="leave" onclick="leaveSession()">Leave</button>
+      <button id="startVideo">Start Video</button>
+      <button id="stopVideo" style="display:none;">Stop Video</button>
+      <button id="startAudio">Start Audio</button>
+      <button id="muteAudio" style="display:none;">Mute</button>
+      <button id="unmuteAudio" style="display:none;">Unmute</button>
+      <button id="leave">Leave</button>
     </div>
   </div>
 
+  <!-- Zoom Video SDK -->
   <script src="https://source.zoom.us/videosdk/2.2.12/lib.js"></script>
+  <!-- Your updated JS -->
   <script src="./scripts.js"></script>
+
+  <script>
+    // Assign button click handlers (from updated scripts.js)
+    document.getElementById('getSignature').onclick = getSignature;
+    document.getElementById('startVideo').onclick = startVideo;
+    document.getElementById('stopVideo').onclick = stopVideo;
+    document.getElementById('startAudio').onclick = startAudio;
+    document.getElementById('muteAudio').onclick = muteAudio;
+    document.getElementById('unmuteAudio').onclick = unmuteAudio;
+    document.getElementById('leave').onclick = leaveSession;
+  </script>
 </body>
 </html>
-
