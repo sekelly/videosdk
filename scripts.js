@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Make sure Zoom SDK is loaded
   if (!window.WebVideoSDK) {
     console.error('Zoom Video SDK not loaded!');
     return;
@@ -7,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const VideoSDK = window.WebVideoSDK.default;
 
-  // Configuration
   const signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest';
   let zmClient = VideoSDK.createClient();
   let zmStream;
@@ -21,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let userIdentity;
   let sessionKey;
 
-  // Wire up buttons
+  // Wire buttons
   document.getElementById('getSignature').onclick = getSignature;
   document.getElementById('startVideo').onclick = startVideo;
   document.getElementById('stopVideo').onclick = stopVideo;
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   zmClient.init('US-en', 'CDN');
 
-  // Get session signature from server
   function getSignature() {
     const btn = document.getElementById('getSignature');
     btn.textContent = 'Joining Session...';
@@ -84,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ✅ Self view using attachVideo() with fill to remove black bars
   async function startVideo() {
     const startButton = document.getElementById('startVideo');
     startButton.textContent = 'Starting Video...';
@@ -95,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const container = document.getElementById('self-view-container');
       const userId = zmClient.getCurrentUserInfo().userId;
 
-      // Clear previous video
       container.innerHTML = '';
 
       const videoElement = await zmStream.attachVideo(userId, container, {
@@ -138,14 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startAudio() {
     const isSafari = window.safari !== undefined;
-
     if (isSafari) {
       if (audioDecode && audioEncode) {
         zmStream.startAudio();
         document.getElementById('startAudio').style.display = 'none';
         document.getElementById('muteAudio').style.display = 'inline-block';
-      } else {
-        console.log('Safari audio init not finished');
       }
     } else {
       zmStream.startAudio();
@@ -197,11 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ✅ Remote participant using attachVideo()
   zmClient.on('peer-video-state-change', async (payload) => {
     try {
       const container = document.getElementById('participant-container');
-
       if (payload.action === 'Start') {
         container.innerHTML = '';
         const videoElement = await zmStream.attachVideo(payload.userId, container, {
