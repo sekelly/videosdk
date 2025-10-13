@@ -26,10 +26,15 @@
       </div>
       <div id="session" style="display: none;">
         <div class="self">
-          <h3 id="self-view-name">😃 Me</h3>
-          <!-- FIXED: Added playsinline attribute -->
-          <video id="self-view-video" width="1920" height="1080" style="display: none;" muted autoplay playsinline></video>
-        </div>
+     <h3 id="self-view-name">😃 Me</h3>
+     <video 
+      id="self-view-video" 
+      style="display: none; max-width: 400px; width: 100%; height: auto; border: 2px solid #ccc;" 
+       muted 
+       autoplay 
+       playsinline>
+       </video>
+       </div>
         <div class="participant">
           <h3 id="participant-name">⏳ Waiting for participant to join...</h3>
           <canvas id="participant-canvas" width="1920" height="1080" style="display: none;"></canvas>
