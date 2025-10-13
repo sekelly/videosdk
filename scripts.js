@@ -1,15 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Zoom Video SDK
-  const VideoSDK = window.WebVideoSDK?.default;
-  if (!VideoSDK) throw new Error("Zoom Video SDK failed to load");
+  // Make sure Zoom SDK is loaded
+  if (!window.WebVideoSDK) {
+    console.error('Zoom Video SDK not loaded!');
+    return;
+  }
 
+  const VideoSDK = window.WebVideoSDK.default;
+
+  // Configuration
+  const signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest';
   let zmClient = VideoSDK.createClient();
   let zmStream;
-  let audioDecode = false;
-  let audioEncode = false;
+  let audioDecode;
+  let audioEncode;
 
-  // Config
-  const signatureEndpoint = 'https://l1sgnx6bek.execute-api.us-east-1.amazonaws.com/latest';
   let sessionName = '';
   let sessionPasscode = '';
   let userName = 'Participant' + Math.floor(Math.random() * 100);
@@ -17,39 +21,43 @@ document.addEventListener('DOMContentLoaded', () => {
   let userIdentity;
   let sessionKey;
 
-  // Initialize client
+  // Wire up buttons
+  document.getElementById('getSignature').onclick = getSignature;
+  document.getElementById('startVideo').onclick = startVideo;
+  document.getElementById('stopVideo').onclick = stopVideo;
+  document.getElementById('startAudio').onclick = startAudio;
+  document.getElementById('muteAudio').onclick = muteAudio;
+  document.getElementById('unmuteAudio').onclick = unmuteAudio;
+  document.getElementById('leave').onclick = leaveSession;
+
   zmClient.init('US-en', 'CDN');
 
-  // Button event
-  document.querySelector('#getSignature').onclick = getSignature;
-
-  // Get Zoom signature
+  // Get session signature from server
   function getSignature() {
-    const btn = document.querySelector('#getSignature');
+    const btn = document.getElementById('getSignature');
     btn.textContent = 'Joining Session...';
     btn.disabled = true;
-    document.querySelector('#error').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
 
     fetch(signatureEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionName: document.getElementById('sessionName').value || sessionName,
-        role: role,
-        userIdentity: userIdentity,
-        sessionKey: sessionKey
-      })
+        role,
+        userIdentity,
+        sessionKey
+      }),
     })
-    .then(res => res.json())
-    .then(data => joinSession(data.signature))
-    .catch(err => {
-      console.error(err);
-      btn.textContent = 'Join Session';
-      btn.disabled = false;
-    });
+      .then(res => res.json())
+      .then(data => joinSession(data.signature))
+      .catch(err => {
+        console.error(err);
+        btn.textContent = 'Join Session';
+        btn.disabled = false;
+      });
   }
 
-  // Join session
   async function joinSession(signature) {
     try {
       await zmClient.join(
@@ -63,43 +71,47 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log(zmClient.getSessionInfo());
 
       if (zmClient.getAllUser().length > 4) {
-        document.querySelector('#error').style.display = 'block';
+        document.getElementById('error').style.display = 'block';
         setTimeout(() => leaveSession(), 1000);
       } else {
-        document.querySelector('#session').style.display = 'flex';
-        document.querySelector('#landing').style.display = 'none';
+        document.getElementById('session').style.display = 'flex';
+        document.getElementById('landing').style.display = 'none';
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
+      document.getElementById('getSignature').textContent = 'Join Session';
+      document.getElementById('getSignature').disabled = false;
     }
   }
 
-  // Start self-view video
+  // ✅ Self view using attachVideo() with fill to remove black bars
   async function startVideo() {
-    const startButton = document.querySelector('#startVideo');
+    const startButton = document.getElementById('startVideo');
     startButton.textContent = 'Starting Video...';
     startButton.disabled = true;
 
     try {
       await zmStream.startVideo({ mirrored: true, hd: true });
-      const container = document.querySelector('#self-view-container');
+      const container = document.getElementById('self-view-container');
       const userId = zmClient.getCurrentUserInfo().userId;
 
+      // Clear previous video
       container.innerHTML = '';
+
       const videoElement = await zmStream.attachVideo(userId, container, {
         mirrored: true,
         hd: true,
-        fill: true // removes black bars
+        fill: true
       });
 
-      container.appendChild(videoElement);
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
       videoElement.style.objectFit = 'cover';
+      container.appendChild(videoElement);
 
-      document.querySelector('#self-view-name').style.display = 'none';
+      document.getElementById('self-view-name').style.display = 'none';
       startButton.style.display = 'none';
-      document.querySelector('#stopVideo').style.display = 'inline-block';
+      document.getElementById('stopVideo').style.display = 'inline-block';
     } catch (err) {
       console.error('Error starting video:', err);
     } finally {
@@ -108,68 +120,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Stop self-view video
   async function stopVideo() {
     try {
       const userId = zmClient.getCurrentUserInfo().userId;
       await zmStream.stopVideo();
       await zmStream.detachVideo(userId);
 
-      document.querySelector('#self-view-container').innerHTML = '';
-      document.querySelector('#self-view-name').style.display = 'block';
-      document.querySelector('#startVideo').style.display = 'inline-block';
-      document.querySelector('#stopVideo').style.display = 'none';
+      const container = document.getElementById('self-view-container');
+      container.innerHTML = '';
+      document.getElementById('self-view-name').style.display = 'block';
+      document.getElementById('startVideo').style.display = 'inline-block';
+      document.getElementById('stopVideo').style.display = 'none';
     } catch (err) {
       console.error('Error stopping video:', err);
     }
   }
 
-  // Audio functions
   function startAudio() {
     const isSafari = window.safari !== undefined;
 
-    if (isSafari && !(audioDecode && audioEncode)) {
-      console.log('Desktop Safari audio init not finished');
-      return;
+    if (isSafari) {
+      if (audioDecode && audioEncode) {
+        zmStream.startAudio();
+        document.getElementById('startAudio').style.display = 'none';
+        document.getElementById('muteAudio').style.display = 'inline-block';
+      } else {
+        console.log('Safari audio init not finished');
+      }
+    } else {
+      zmStream.startAudio();
+      document.getElementById('startAudio').style.display = 'none';
+      document.getElementById('muteAudio').style.display = 'inline-block';
     }
-
-    zmStream.startAudio();
-    document.querySelector('#startAudio').style.display = 'none';
-    document.querySelector('#muteAudio').style.display = 'inline-block';
   }
 
   function muteAudio() {
     zmStream.muteAudio();
-    document.querySelector('#muteAudio').style.display = 'none';
-    document.querySelector('#unmuteAudio').style.display = 'inline-block';
+    document.getElementById('muteAudio').style.display = 'none';
+    document.getElementById('unmuteAudio').style.display = 'inline-block';
   }
 
   function unmuteAudio() {
     zmStream.unmuteAudio();
-    document.querySelector('#muteAudio').style.display = 'inline-block';
-    document.querySelector('#unmuteAudio').style.display = 'none';
+    document.getElementById('muteAudio').style.display = 'inline-block';
+    document.getElementById('unmuteAudio').style.display = 'none';
   }
 
-  // Leave session
   function leaveSession() {
     zmClient.leave();
-    document.querySelector('#session').style.display = 'none';
-    document.querySelector('#self-view-container').innerHTML = '';
-    document.querySelector('#participant-container').innerHTML = '';
-    document.querySelector('#startVideo').style.display = 'inline-block';
-    document.querySelector('#startAudio').style.display = 'inline-block';
-    document.querySelector('#self-view-name').style.display = 'block';
-    document.querySelector('#participant-name').textContent = '⏳ Waiting for participant to join...';
-    document.querySelector('#getSignature').textContent = 'Join Session';
-    document.querySelector('#getSignature').disabled = false;
-    document.querySelector('#startVideo').textContent = 'Start Video';
-    document.querySelector('#startVideo').disabled = false;
-    document.querySelector('#landing').style.display = 'flex';
+
+    document.getElementById('session').style.display = 'none';
+    document.getElementById('muteAudio').style.display = 'none';
+    document.getElementById('unmuteAudio').style.display = 'none';
+    document.getElementById('stopVideo').style.display = 'none';
+    document.getElementById('self-view-container').innerHTML = '';
+    document.getElementById('participant-container').innerHTML = '';
+
+    document.getElementById('startVideo').style.display = 'inline-block';
+    document.getElementById('startAudio').style.display = 'inline-block';
+    document.getElementById('self-view-name').style.display = 'block';
+
+    document.getElementById('participant-name').textContent = '⏳ Waiting for participant to join...';
+    document.getElementById('getSignature').textContent = 'Join Session';
+    document.getElementById('getSignature').disabled = false;
+    document.getElementById('startVideo').textContent = 'Start Video';
+    document.getElementById('startVideo').disabled = false;
+
+    document.getElementById('landing').style.display = 'flex';
   }
 
-  // Media SDK change listener
   zmClient.on('media-sdk-change', (payload) => {
-    console.log(payload);
     const { action, type, result } = payload;
     if (type === 'audio' && result === 'success') {
       if (action === 'encode') audioEncode = true;
@@ -177,10 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Peer video state change
+  // ✅ Remote participant using attachVideo()
   zmClient.on('peer-video-state-change', async (payload) => {
     try {
-      const container = document.querySelector('#participant-container');
+      const container = document.getElementById('participant-container');
 
       if (payload.action === 'Start') {
         container.innerHTML = '';
@@ -188,26 +208,25 @@ document.addEventListener('DOMContentLoaded', () => {
           hd: true,
           fill: true
         });
-        container.appendChild(videoElement);
         videoElement.style.width = '100%';
         videoElement.style.height = '100%';
         videoElement.style.objectFit = 'cover';
-        document.querySelector('#participant-name').style.display = 'none';
+        container.appendChild(videoElement);
+        document.getElementById('participant-name').style.display = 'none';
       } else if (payload.action === 'Stop') {
         await zmStream.detachVideo(payload.userId);
         container.innerHTML = '';
-        document.querySelector('#participant-name').style.display = 'block';
+        document.getElementById('participant-name').style.display = 'block';
       }
     } catch (err) {
       console.error('Error handling peer video:', err);
     }
   });
 
-  // User events
   zmClient.on('user-added', (payload) => {
     if (zmClient.getAllUser().length < 3) {
       if (payload[0].userId !== zmClient.getCurrentUserInfo().userId) {
-        document.querySelector('#participant-name').textContent = payload[0].displayName;
+        document.getElementById('participant-name').textContent = payload[0].displayName;
       }
     }
   });
@@ -215,18 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
   zmClient.on('user-removed', (payload) => {
     if (zmClient.getAllUser().length < 2) {
       if (payload.length && payload[0].userId !== zmClient.getCurrentUserInfo().userId) {
-        document.querySelector('#participant-name').textContent = 'Participant left...';
+        document.getElementById('participant-name').textContent = 'Participant left...';
       }
     }
   });
 
   zmClient.on('active-share-change', (payload) => console.log(payload));
-
-  // Expose functions to buttons
-  window.startVideo = startVideo;
-  window.stopVideo = stopVideo;
-  window.startAudio = startAudio;
-  window.muteAudio = muteAudio;
-  window.unmuteAudio = unmuteAudio;
-  window.leaveSession = leaveSession;
 });
