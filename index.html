@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <meta http-equiv="origin-trial" content="AkBC6T2NnosY6N71LXXA09Q1GMiLzuHuOKpC9SwfbPxzoxr2PMOM2uHZmAxIFqq+dCvUD/4kPoylRZ4G5YCkow8AAAB7eyJvcmlnaW4iOiJodHRwczovL3Nla2VsbHkuZ2l0aHViLmlvOjQ0MyIsImZlYXR1cmUiOiJVbnJlc3RyaWN0ZWRTaGFyZWRBcnJheUJ1ZmZlciIsImV4cGlyeSI6MTcwOTg1NTk5OSwiaXNTdWJkb21haW4iOnRydWV9" />
   </head>
-    <style>
+  <style>
     body {
        background-color: rgb(167, 173, 177);
        background-image: url("https://zoom.us/account/branding/p/b7f37763-6dee-4be3-8c55-cda5ba5c7310.gif");
@@ -17,39 +17,33 @@
     <main>
       <div id="landing">
         <h2> Video WebSDK 2.2.12 💬</h2>
-        <small id="error">Session full, join another.</small>
+        <small id="error" style="display: none;">Session full, join another.</small>
         <input type="text" placeholder="😃 Enter Name" id="userName">
         <input type="text" placeholder="🚪 Session Name" id="sessionName">
         <input type="text" placeholder="🔑 Session Passcode" id="sessionPasscode">
         <button onClick="getSignature()" class="primary" id="getSignature">Join Session</button>
         <small class="zoom">Powered by the <a href="https://marketplace.zoom.us/docs/sdk/video/introduction/" target="_blank">Zoom Video SDK</a></small>
       </div>
-
-      <div id="session">
+      <div id="session" style="display: none;">
         <div class="self">
           <h3 id="self-view-name">😃 Me</h3>
-          <video id="self-view-video" width="1920" height="1080"></video>
-          <canvas id="self-view-canvas" width="1920" height="1080"></canvas>
+          <!-- Removed video element, using only canvas -->
+          <canvas id="self-view-canvas" width="1920" height="1080" style="display: none;"></canvas>
         </div>
         <div class="participant">
           <h3 id="participant-name">⏳ Waiting for participant to join...</h3>
-          <canvas id="participant-canvas" width="1920" height="1080"></canvas>
+          <canvas id="participant-canvas" width="1920" height="1080" style="display: none;"></canvas>
         </div>
-
         <div class="controls">
-
           <button onClick="startAudio()" class="primary" id="startAudio">Start Audio</button>
-          <button onClick="muteAudio()" class="primary" id="muteAudio">Mute</button>
-          <button onClick="unmuteAudio()" class="primary" id="unmuteAudio">Unmute</button>
-
+          <button onClick="muteAudio()" class="primary" id="muteAudio" style="display: none;">Mute</button>
+          <button onClick="unmuteAudio()" class="primary" id="unmuteAudio" style="display: none;">Unmute</button>
           <button onClick="startVideo()" class="primary" id="startVideo">Start Video</button>
-          <button onClick="stopVideo()" class="primary" id="stopVideo">Stop Video</button>
-
+          <button onClick="stopVideo()" class="primary" id="stopVideo" style="display: none;">Stop Video</button>
           <button onClick="leaveSession()" class="leave" id="leaveSession">Leave Session</button>
         </div>
       </div>
     </main>
-
     <script src="https://source.zoom.us/videosdk/zoom-video-2.2.12.min.js"></script>
     <script type="text/javascript" src="scripts.js"></script>
   </body>
