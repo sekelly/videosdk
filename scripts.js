@@ -63,7 +63,7 @@ function joinSession(signature) {
   })
 }
 
-function startVideo() {
+/*function startVideo() {
   document.querySelector('#startVideo').textContent = 'Starting Video...'
   document.querySelector('#startVideo').disabled = true
 
@@ -98,7 +98,44 @@ function startVideo() {
       console.log(error)
     })
   }
+} */
+
+function startVideo() {
+  const startButton = document.querySelector('#startVideo');
+  startButton.textContent = 'Starting Video...';
+  startButton.disabled = true;
+
+  // Start local video (no videoElement argument)
+  zmStream.startVideo({ mirrored: true, hd: true })
+    .then(() => {
+      // Render the local user's video on the canvas
+      const canvas = document.querySelector('#self-view-canvas');
+      const userId = zmClient.getCurrentUserInfo().userId;
+
+      zmStream.renderVideo(canvas, userId, 1920, 1080, 0, 0, 3)
+        .then(() => {
+          canvas.style.display = 'block';
+          document.querySelector('#self-view-name').style.display = 'none';
+
+          startButton.style.display = 'none';
+          document.querySelector('#stopVideo').style.display = 'inline-block';
+
+          startButton.textContent = 'Start Video';
+          startButton.disabled = false;
+        })
+        .catch((error) => {
+          console.error('Error rendering self view:', error);
+          startButton.textContent = 'Start Video';
+          startButton.disabled = false;
+        });
+    })
+    .catch((error) => {
+      console.error('Error starting video:', error);
+      startButton.textContent = 'Start Video';
+      startButton.disabled = false;
+    });
 }
+
 
 function stopVideo() {
   zmStream.stopVideo()
