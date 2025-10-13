@@ -34,6 +34,13 @@
       overflow: hidden;
     }
 
+    #self-view-container,
+    #participant-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     #self-view-name,
     #participant-name {
       position: absolute;
@@ -46,6 +53,14 @@
       font-size: 14px;
     }
 
+    input {
+      margin: 0.5rem 0;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      width: 200px;
+    }
+
     button {
       padding: 8px 14px;
       border: none;
@@ -54,22 +69,17 @@
       color: white;
       cursor: pointer;
       font-weight: bold;
+      margin: 0.25rem;
     }
 
     button:disabled {
       background: #555;
     }
-
-    input {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      margin: 0.5rem 0;
-      width: 200px;
-    }
   </style>
 </head>
+
 <body>
+  <!-- Landing Page -->
   <div id="landing">
     <h2>Join Zoom Video SDK Session</h2>
     <input id="sessionName" placeholder="Session Name" />
@@ -79,13 +89,12 @@
     <p id="error" style="display:none;color:red;">Session full or error joining.</p>
   </div>
 
+  <!-- Session Page -->
   <div id="session">
-    <!-- Self video -->
     <div class="video-container" id="self-view-container">
       <div id="self-view-name">Self View</div>
     </div>
 
-    <!-- Remote participant video -->
     <div class="video-container" id="participant-container">
       <div id="participant-name">⏳ Waiting for participant to join...</div>
     </div>
@@ -100,7 +109,9 @@
     </div>
   </div>
 
+  <!-- Zoom Video SDK -->
   <script src="https://source.zoom.us/videosdk/2.2.12/lib.js"></script>
+  <!-- Your scripts.js -->
   <script src="./scripts.js"></script>
 </body>
 </html>
