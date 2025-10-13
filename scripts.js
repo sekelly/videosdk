@@ -56,43 +56,69 @@ function joinSession(signature) {
   })
 }
 
-// FIXED: Updated startVideo function to use attachVideo for self-view
+// FIXED: Updated startVideo function with proper element checking
 function startVideo() {
   document.querySelector('#startVideo').textContent = 'Starting Video...'
   document.querySelector('#startVideo').disabled = true
   
+  // Check if video element exists
+  const videoElement = document.querySelector('#self-view-video')
+  if (!videoElement) {
+    console.error('Video element not found!')
+    document.querySelector('#startVideo').textContent = 'Start Video'
+    document.querySelector('#startVideo').disabled = false
+    return
+  }
+  
+  console.log('Video element found:', videoElement)
+  
   // Start video without videoElement option (this removes the deprecation warning)
   zmStream.startVideo({ mirrored: true, hd: true }).then(() => {
+    console.log('Video started, now attaching to element...')
+    
     // Use attachVideo for self-view (required for certain browsers)
-    zmStream.attachVideo(zmClient.getCurrentUserInfo().userId, document.querySelector('#self-view-video')).then(() => {
-      document.querySelector('#self-view-video').style.display = 'block'
+    zmStream.attachVideo(zmClient.getCurrentUserInfo().userId, videoElement).then(() => {
+      console.log('Video attached successfully')
+      videoElement.style.display = 'block'
       document.querySelector('#self-view-name').style.display = 'none'
       document.querySelector('#startVideo').style.display = 'none'
       document.querySelector('#stopVideo').style.display = 'inline-block'
       document.querySelector('#startVideo').textContent = 'Start Video'
       document.querySelector('#startVideo').disabled = false
     }).catch((error) => {
-      console.log(error)
+      console.error('Error attaching video:', error)
+      document.querySelector('#startVideo').textContent = 'Start Video'
+      document.querySelector('#startVideo').disabled = false
     })
   }).catch((error) => {
-    console.log(error)
+    console.error('Error starting video:', error)
+    document.querySelector('#startVideo').textContent = 'Start Video'
+    document.querySelector('#startVideo').disabled = false
   })
 }
 
-// FIXED: Updated stopVideo function
+// FIXED: Updated stopVideo function with proper error handling
 function stopVideo() {
+  const videoElement = document.querySelector('#self-view-video')
+  
+  if (!videoElement) {
+    console.error('Video element not found during stop!')
+    return
+  }
+  
   // Detach video before stopping
   zmStream.detachVideo(zmClient.getCurrentUserInfo().userId).then(() => {
+    console.log('Video detached successfully')
     zmStream.stopVideo()
-    document.querySelector('#self-view-video').style.display = 'none'
+    videoElement.style.display = 'none'
     document.querySelector('#self-view-name').style.display = 'block'
     document.querySelector('#startVideo').style.display = 'inline-block'
     document.querySelector('#stopVideo').style.display = 'none'
   }).catch((error) => {
-    console.log(error)
+    console.error('Error detaching video:', error)
     // Fallback: still stop video even if detach fails
     zmStream.stopVideo()
-    document.querySelector('#self-view-video').style.display = 'none'
+    videoElement.style.display = 'none'
     document.querySelector('#self-view-name').style.display = 'block'
     document.querySelector('#startVideo').style.display = 'inline-block'
     document.querySelector('#stopVideo').style.display = 'none'
@@ -130,14 +156,18 @@ function unmuteAudio() {
   document.querySelector('#unmuteAudio').style.display = 'none'
 }
 
-// FIXED: Updated leaveSession function
 function leaveSession() {
   zmClient.leave()
   document.querySelector('#session').style.display = 'none'
   document.querySelector('#muteAudio').style.display = 'none'
   document.querySelector('#unmuteAudio').style.display = 'none'
   document.querySelector('#stopVideo').style.display = 'none'
-  document.querySelector('#self-view-video').style.display = 'none'
+  
+  const videoElement = document.querySelector('#self-view-video')
+  if (videoElement) {
+    videoElement.style.display = 'none'
+  }
+  
   document.querySelector('#participant-canvas').style.display = 'none'
   document.querySelector('#startVideo').style.display = 'inline-block'
   document.querySelector('#startAudio').style.display = 'inline-block'
