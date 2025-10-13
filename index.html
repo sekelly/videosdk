@@ -27,11 +27,12 @@
       <div id="session" style="display: none;">
         <div class="self">
           <h3 id="self-view-name">😃 Me</h3>
-          <!-- Removed video element, using only canvas -->
-          <canvas id="self-view-canvas" width="1920" height="1080" style="display: none;"></canvas>
+          <!-- Keep video element for self-view (required for certain browsers) -->
+          <video id="self-view-video" width="1920" height="1080" style="display: none;" muted autoplay></video>
         </div>
         <div class="participant">
           <h3 id="participant-name">⏳ Waiting for participant to join...</h3>
+          <!-- Canvas for participant video -->
           <canvas id="participant-canvas" width="1920" height="1080" style="display: none;"></canvas>
         </div>
         <div class="controls">
