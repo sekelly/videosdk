@@ -6,7 +6,7 @@ let audioDecode
 let audioEncode
 
 // setup your signature endpoint here: https://github.com/zoom/videosdk-sample-signature-node.js
-let signatureEndpoint = 'https://zoom-video-sdk-auth-sample-6pgf.onrender.com'
+let signatureEndpoint = 'https://videosdk-sample-signature-node-js.vercel.app/'
 let sessionName = ''
 let sessionPasscode = ''
 let userName = 'Participant' + Math.floor(Math.random() * 100)
