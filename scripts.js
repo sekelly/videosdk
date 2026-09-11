@@ -8,7 +8,9 @@ let recordingClient
 let audioDecode
 let audioEncode
 
-// setup your signature endpoint here: https://github.com/zoom/videosdk-sample-signature-node.js
+// IMPORTANT: point this at YOUR OWN deployment of https://github.com/zoom/videosdk-sample-signature-node.js
+// Recording is billed to and stored in the Video SDK account that owns the SDK key used to sign the JWT.
+// Zoom's public demo endpoint below signs with Zoom's key, so recording won't work / won't land in your account.
 let signatureEndpoint = 'https://videosdk-sample-signature-node-js.vercel.app/'
 let sessionName = ''
 let sessionPasscode = ''
@@ -45,10 +47,14 @@ function getSignature() {
       sessionName: document.getElementById('sessionName').value || sessionName,
       role: role,
       userIdentity: userIdentity,
-      sessionKey: sessionKey
+      sessionKey: sessionKey,
+      cloudRecordingOption: 0 // 0 = one composite recording of the session
     })
   }).then((response) => response.json())
-    .then((data) => joinSession(data.signature))
+    .then((data) => {
+      if (!data.signature) throw new Error('Signature endpoint error: ' + JSON.stringify(data))
+      joinSession(data.signature)
+    })
     .catch((error) => {
       console.log(error)
       resetJoinButton()
@@ -84,6 +90,10 @@ function joinSession(signature) {
 
     recordingClient = zmClient.getRecordingClient()
     updateRecordingUI()
+    const diag = recordingDiagnostics()
+    if (diag.isHost && diag.canStartRecording === false) {
+      toast('Cloud recording is not enabled for the Video SDK account that signed this session.')
+    }
   }).catch((error) => {
     console.log(error)
     resetJoinButton()
@@ -195,8 +205,36 @@ function unmuteAudio() {
 // Only the host or a manager can control recording, and the Video SDK account that owns
 // the SDK key must have cloud recording enabled (Cloud Recording Storage Plan).
 
+function isHostOrManager() {
+  return !!(zmClient.isHost && zmClient.isHost()) || !!(zmClient.isManager && zmClient.isManager())
+}
+
 function canControlRecording() {
-  return !!recordingClient && (zmClient.isHost() || zmClient.isManager()) && recordingClient.canStartRecording()
+  return !!recordingClient && isHostOrManager() && recordingClient.canStartRecording()
+}
+
+// Call recordingDiagnostics() in the browser console to see why recording is or isn't available
+function recordingDiagnostics() {
+  const info = {
+    signatureEndpoint: signatureEndpoint,
+    isHost: !!(zmClient.isHost && zmClient.isHost()),
+    isManager: !!(zmClient.isManager && zmClient.isManager()),
+    canStartRecording: recordingClient ? recordingClient.canStartRecording() : 'no recording client',
+    cloudRecordingStatus: recordingClient ? recordingClient.getCloudRecordingStatus() : 'no recording client',
+    sessionInfo: zmClient.getSessionInfo()
+  }
+  console.table(info)
+  return info
+}
+window.recordingDiagnostics = recordingDiagnostics
+
+function toast(message, type) {
+  const el = document.querySelector('#toast')
+  el.textContent = message
+  el.className = type || ''
+  el.style.display = 'block'
+  clearTimeout(toast.timer)
+  toast.timer = setTimeout(() => { el.style.display = 'none' }, 7000)
 }
 
 function setDisplay(id, show) {
@@ -226,7 +264,12 @@ function recordingAction(buttonId, busyText, action) {
   const original = button.textContent
   button.textContent = busyText
   button.disabled = true
-  action()
+  Promise.resolve()
+    .then(() => {
+      if (!recordingClient) throw new Error('Not in a session')
+      if (!isHostOrManager()) throw new Error('Only the host or a manager can control recording')
+      return action()
+    })
     .then((result) => {
       // These methods resolve with an Error object instead of rejecting in some cases
       if (result instanceof Error) throw result
@@ -243,13 +286,8 @@ function recordingAction(buttonId, busyText, action) {
 }
 
 function alertRecordingError(error) {
-  const reason = (error && (error.reason || error.message || error.type)) || 'Unknown error'
-  document.querySelector('#error').textContent = 'Recording failed: ' + reason
-  document.querySelector('#error').style.display = 'block'
-  setTimeout(() => {
-    document.querySelector('#error').style.display = 'none'
-    document.querySelector('#error').textContent = 'Session full, join another.'
-  }, 5000)
+  const reason = (error && (error.reason || error.message || error.type || JSON.stringify(error))) || 'Unknown error'
+  toast('Recording failed: ' + reason)
 }
 
 function startRecording() {
@@ -272,6 +310,8 @@ function stopRecording() {
 zmClient.on('recording-change', (payload) => {
   console.log('recording-change', payload)
   updateRecordingUI(payload.state)
+  if (payload.state === 'Recording') toast('Cloud recording is on', 'info')
+  if (payload.state === 'Stopped') toast('Recording stopped — it will appear in your Video SDK account once processed', 'info')
 })
 
 // Host can change hands (e.g. host leaves) — show/hide the controls accordingly
@@ -367,11 +407,8 @@ zmClient.on('user-removed', (payload) => {
 zmClient.on('active-share-change', (payload) => {
   console.log(payload)
 })
-  
  
-  
+    
 
-  
 
-  
     
