@@ -91,7 +91,8 @@ small.zoom {
   font-style: italic;
 }
 
-#session, #muteAudio, #unmuteAudio, #stopVideo {
+#session, #muteAudio, #unmuteAudio, #stopVideo,
+#startRecording, #pauseRecording, #resumeRecording, #stopRecording, #recording-indicator {
   display: none;
 }
 
@@ -160,4 +161,40 @@ a {
   right: 0;
   text-align: center;
 }
+
+.record {
+  background-color: #c0392b;
+}
+
+#recording-indicator {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 14px;
+}
+
+#recording-indicator .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ff3b30;
+  animation: rec-blink 1.2s infinite;
+}
+
+#recording-indicator.paused .dot {
+  background-color: #f1c40f;
+  animation: none;
+}
+
+@keyframes rec-blink {
+  50% { opacity: 0.2; }
+}
+
 
