@@ -15,14 +15,23 @@ input, button {
   font-size: 16px;
 }
 
-#self-view-video, #self-view-canvas {
+video-player-container {
+  display: block;
   width: 100%;
-  height: 100%;
 }
 
-#participant-canvas {
-  max-height: 100vh;
+video-player {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/9;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+#participant-container {
   max-width: 100vw;
+  max-height: 100vh;
 }
 
 small#error {
@@ -34,10 +43,6 @@ small#error {
   margin-bottom: 20px;
   width: 189px;
   text-align: center;
-}
-
-video, #self-view-canvas {
-  border-radius: 20px;
 }
 
 input {
@@ -86,7 +91,7 @@ small.zoom {
   font-style: italic;
 }
 
-#session, #muteAudio, #unmuteAudio, #stopVideo, #self-view-video, #participant-canvas, #self-view-canvas {
+#session, #muteAudio, #unmuteAudio, #stopVideo {
   display: none;
 }
 
@@ -155,3 +160,4 @@ a {
   right: 0;
   text-align: center;
 }
+
