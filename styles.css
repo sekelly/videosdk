@@ -197,4 +197,28 @@ a {
   50% { opacity: 0.2; }
 }
 
+#toast {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: 90vw;
+  padding: 10px 20px;
+  border-radius: 20px;
+  background-color: #EF476F;
+  color: #ffffff;
+  font-size: 14px;
+  text-align: center;
+}
+
+#toast.info {
+  background-color: #118AB2;
+}
+ 
+ 
+
+
+
 
