@@ -79,7 +79,7 @@ function joinSession(signature) {
 
     if (zmClient.getAllUser().length > 4) {
       document.querySelector('#error').style.display = 'block'
-      setTimeout(() => leaveSession(), 1000)
+      setTimeout(() => { zmClient.leave(); resetToLanding('Session full, join another.') }, 1000)
       return
     }
 
@@ -91,6 +91,7 @@ function joinSession(signature) {
 
     recordingClient = zmClient.getRecordingClient()
     updateRecordingUI()
+    updateHostUI()
     const diag = recordingDiagnostics()
     if (diag.isHost && diag.canStartRecording === false) {
       toast('Cloud recording is not enabled for the Video SDK account that signed this session.')
@@ -363,6 +364,7 @@ zmClient.on('recording-change', (payload) => {
 // Host can change hands (e.g. host leaves) — show/hide the controls accordingly
 zmClient.on('user-updated', () => {
   if (recordingClient) updateRecordingUI()
+  if (zmStream) updateHostUI()
 })
 
 function clearAllVideo() {
@@ -372,9 +374,59 @@ function clearAllVideo() {
   participantContainer().innerHTML = ''
 }
 
+// Leave: only you exit; the session keeps going for everyone else
 function leaveSession() {
   zmClient.leave()
+  resetToLanding()
+}
+
+// End: host only — closes the session for every participant
+function endSession() {
+  if (!zmClient.isHost()) {
+    toast('Only the host can end the session for everyone')
+    return
+  }
+  if (!confirmEnd()) return
+
+  const button = document.querySelector('#endSession')
+  button.textContent = 'Ending...'
+  button.disabled = true
+
+  zmClient.leave(true) // true = end the session for all users
+    .catch((error) => console.log('end session error', error))
+    .finally(() => {
+      button.textContent = 'End Session for All'
+      button.disabled = false
+      resetToLanding()
+    })
+}
+
+// Two-click confirm instead of window.confirm(), which some embedded browsers block
+function confirmEnd() {
+  const button = document.querySelector('#endSession')
+  if (button.dataset.armed === 'true') {
+    button.dataset.armed = 'false'
+    return true
+  }
+  button.dataset.armed = 'true'
+  button.textContent = 'Click again to end for all'
+  setTimeout(() => {
+    button.dataset.armed = 'false'
+    button.textContent = 'End Session for All'
+  }, 4000)
+  return false
+}
+
+// Show the End button only to the host (host can change mid-session)
+function updateHostUI() {
+  const isHost = !!(zmClient.isHost && zmClient.isHost())
+  document.querySelector('#endSession').style.display = isHost ? 'inline-block' : 'none'
+}
+
+// Shared UI cleanup for leave, end, and "host ended the session"
+function resetToLanding(message) {
   clearAllVideo()
+  zmStream = null
   recordingClient = null
   hideConsentPrompt()
   updateRecordingUI('Stopped')
@@ -383,6 +435,7 @@ function leaveSession() {
   document.querySelector('#muteAudio').style.display = 'none'
   document.querySelector('#unmuteAudio').style.display = 'none'
   document.querySelector('#stopVideo').style.display = 'none'
+  document.querySelector('#endSession').style.display = 'none'
   showParticipant(false)
 
   document.querySelector('#startVideo').style.display = 'inline-block'
@@ -393,6 +446,15 @@ function leaveSession() {
   resetJoinButton()
   document.querySelector('#startVideo').textContent = 'Start Video'
   document.querySelector('#startVideo').disabled = false
+
+  const error = document.querySelector('#error')
+  if (message) {
+    error.textContent = message
+    error.style.display = 'block'
+  } else {
+    error.textContent = 'Session full, join another.'
+    error.style.display = 'none'
+  }
 
   document.querySelector('#landing').style.display = 'flex'
 }
@@ -421,6 +483,14 @@ zmClient.on('peer-video-state-change', (payload) => {
 // After a network drop the SDK reconnects, but the old video elements are dead — re-attach them
 zmClient.on('connection-change', (payload) => {
   console.log('connection-change', payload)
+  if (payload.state === 'Closed') {
+    // Session ended by the host (or we were removed) — send everyone back to the join screen
+    if (document.querySelector('#session').style.display !== 'none') {
+      const ended = payload.reason === 'ended by host'
+      resetToLanding(ended ? 'The host ended the session.' : 'You left the session.')
+    }
+    return
+  }
   if (payload.state === 'Reconnecting') {
     clearAllVideo()
   } else if (payload.state === 'Connected' && zmStream) {
