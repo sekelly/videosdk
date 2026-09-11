@@ -11,7 +11,7 @@ main {
   position: relative;
 }
 
-input, button {
+input, select, button {
   font-size: 16px;
 }
 
@@ -45,7 +45,7 @@ small#error {
   text-align: center;
 }
 
-input {
+input, select {
   border-radius: 20px;
   padding: 10px 20px;
   margin-bottom: 20px;
@@ -220,7 +220,4 @@ a {
 .end {
   background-color: #8b0000;
 }
-
-
-
 
