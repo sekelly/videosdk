@@ -4,6 +4,7 @@ const VideoQuality = window.WebVideoSDK.VideoQuality || { Video_360P: 2, Video_7
 
 let zmClient = VideoSDK.createClient()
 let zmStream
+let recordingClient
 let audioDecode
 let audioEncode
 
@@ -80,6 +81,9 @@ function joinSession(signature) {
 
     // Render anyone who already had video on before we joined
     renderExistingVideos()
+
+    recordingClient = zmClient.getRecordingClient()
+    updateRecordingUI()
   }).catch((error) => {
     console.log(error)
     resetJoinButton()
@@ -187,6 +191,94 @@ function unmuteAudio() {
   document.querySelector('#unmuteAudio').style.display = 'none'
 }
 
+// ---------- Cloud recording ----------
+// Only the host or a manager can control recording, and the Video SDK account that owns
+// the SDK key must have cloud recording enabled (Cloud Recording Storage Plan).
+
+function canControlRecording() {
+  return !!recordingClient && (zmClient.isHost() || zmClient.isManager()) && recordingClient.canStartRecording()
+}
+
+function setDisplay(id, show) {
+  document.querySelector(id).style.display = show ? 'inline-block' : 'none'
+}
+
+function updateRecordingUI(state) {
+  state = state || (recordingClient ? recordingClient.getCloudRecordingStatus() : 'Stopped')
+  const isRecording = state === 'Recording'
+  const isPaused = state === 'Paused'
+  const controls = canControlRecording()
+
+  setDisplay('#startRecording', controls && !isRecording && !isPaused)
+  setDisplay('#pauseRecording', controls && isRecording)
+  setDisplay('#resumeRecording', controls && isPaused)
+  setDisplay('#stopRecording', controls && (isRecording || isPaused))
+
+  // Everyone (not just the host) sees the notice while recording is on
+  const indicator = document.querySelector('#recording-indicator')
+  indicator.style.display = isRecording || isPaused ? 'flex' : 'none'
+  indicator.classList.toggle('paused', isPaused)
+  document.querySelector('#recording-label').textContent = isPaused ? 'PAUSED' : 'REC'
+}
+
+function recordingAction(buttonId, busyText, action) {
+  const button = document.querySelector(buttonId)
+  const original = button.textContent
+  button.textContent = busyText
+  button.disabled = true
+  action()
+    .then((result) => {
+      // These methods resolve with an Error object instead of rejecting in some cases
+      if (result instanceof Error) throw result
+    })
+    .catch((error) => {
+      console.log('recording error', error)
+      alertRecordingError(error)
+    })
+    .finally(() => {
+      button.textContent = original
+      button.disabled = false
+      updateRecordingUI()
+    })
+}
+
+function alertRecordingError(error) {
+  const reason = (error && (error.reason || error.message || error.type)) || 'Unknown error'
+  document.querySelector('#error').textContent = 'Recording failed: ' + reason
+  document.querySelector('#error').style.display = 'block'
+  setTimeout(() => {
+    document.querySelector('#error').style.display = 'none'
+    document.querySelector('#error').textContent = 'Session full, join another.'
+  }, 5000)
+}
+
+function startRecording() {
+  recordingAction('#startRecording', 'Starting...', () => recordingClient.startCloudRecording())
+}
+
+function pauseRecording() {
+  recordingAction('#pauseRecording', 'Pausing...', () => recordingClient.pauseCloudRecording())
+}
+
+function resumeRecording() {
+  recordingAction('#resumeRecording', 'Resuming...', () => recordingClient.resumeCloudRecording())
+}
+
+function stopRecording() {
+  recordingAction('#stopRecording', 'Stopping...', () => recordingClient.stopCloudRecording())
+}
+
+// Fires for every participant whenever the recording state changes
+zmClient.on('recording-change', (payload) => {
+  console.log('recording-change', payload)
+  updateRecordingUI(payload.state)
+})
+
+// Host can change hands (e.g. host leaves) — show/hide the controls accordingly
+zmClient.on('user-updated', () => {
+  if (recordingClient) updateRecordingUI()
+})
+
 function clearAllVideo() {
   attached.clear()
   pending.clear()
@@ -197,6 +289,8 @@ function clearAllVideo() {
 function leaveSession() {
   zmClient.leave()
   clearAllVideo()
+  recordingClient = null
+  updateRecordingUI('Stopped')
 
   document.querySelector('#session').style.display = 'none'
   document.querySelector('#muteAudio').style.display = 'none'
@@ -273,3 +367,11 @@ zmClient.on('user-removed', (payload) => {
 zmClient.on('active-share-change', (payload) => {
   console.log(payload)
 })
+  
+ 
+  
+
+  
+
+  
+    
