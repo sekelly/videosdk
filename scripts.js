@@ -45,7 +45,7 @@ function getSignature() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       sessionName: document.getElementById('sessionName').value || sessionName,
-      role: role,
+      role: parseInt(document.getElementById('role').value, 10), // 1 = host, 0 = participant (must be a number)
       userIdentity: userIdentity,
       sessionKey: sessionKey,
       cloudRecordingOption: 1,   // 1 = separate video file per user (plus the combined recording)
@@ -54,12 +54,33 @@ function getSignature() {
   }).then((response) => response.json())
     .then((data) => {
       if (!data.signature) throw new Error('Signature endpoint error: ' + JSON.stringify(data))
+      logTokenRecordingFields(data.signature)
       joinSession(data.signature)
     })
     .catch((error) => {
       console.log(error)
       resetJoinButton()
     })
+}
+
+// Prints the recording-related claims actually inside the JWT, so you can confirm
+// the signature endpoint is really setting them (per-user recording needs both = 1,
+// and cloud_recording_option only takes effect on the HOST's token, role_type 1)
+function logTokenRecordingFields(signature) {
+  try {
+    const part = signature.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(part + '='.repeat((4 - part.length % 4) % 4)))
+    console.table({
+      role_type: payload.role_type,
+      cloud_recording_option: payload.cloud_recording_option,
+      cloud_recording_election: payload.cloud_recording_election
+    })
+    if (payload.cloud_recording_option !== 1 || payload.cloud_recording_election !== 1) {
+      console.warn('Token is missing cloud_recording_option: 1 and/or cloud_recording_election: 1 — redeploy the signature endpoint')
+    }
+  } catch (e) {
+    console.log('Could not decode token', e)
+  }
 }
 
 function resetJoinButton() {
@@ -524,8 +545,7 @@ zmClient.on('user-removed', (payload) => {
 zmClient.on('active-share-change', (payload) => {
   console.log(payload)
 })
- 
     
 
 
-    
+
