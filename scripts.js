@@ -48,7 +48,8 @@ function getSignature() {
       role: role,
       userIdentity: userIdentity,
       sessionKey: sessionKey,
-      cloudRecordingOption: 0 // 0 = one composite recording of the session
+      cloudRecordingOption: 1,   // 1 = separate video file per user (plus the combined recording)
+      cloudRecordingElection: 1  // 1 = record this user's own video individually
     })
   }).then((response) => response.json())
     .then((data) => {
@@ -306,9 +307,54 @@ function stopRecording() {
   recordingAction('#stopRecording', 'Stopping...', () => recordingClient.stopCloudRecording())
 }
 
+// Individual (per-user) recording consent.
+// When the host starts per-user recording, the SDK sends state 'Ask' to participants,
+// who must accept or decline. The prompt is built here so no HTML changes are needed.
+function showConsentPrompt() {
+  if (document.querySelector('#recording-consent')) return
+  const bar = document.createElement('div')
+  bar.id = 'recording-consent'
+  bar.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;' +
+    'max-width:90vw;padding:20px 24px;border-radius:20px;background:#ffffff;color:#073B4C;' +
+    'box-shadow:0 10px 30px rgba(0,0,0,.35);text-align:center;font-size:15px'
+  bar.innerHTML =
+    '<p style="margin:0 0 14px">The host wants to record your video individually. Do you consent?</p>' +
+    '<button class="primary" id="consent-accept">Accept</button>' +
+    '<button class="leave" id="consent-decline">Decline</button>'
+  document.body.appendChild(bar)
+
+  const respond = (accept) => {
+    bar.remove()
+    const call = accept ? recordingClient.acceptIndividualRecording() : recordingClient.declineIndividualRecording()
+    Promise.resolve(call)
+      .then((result) => {
+        if (result instanceof Error) throw result
+        toast(accept ? 'You accepted individual recording' : 'You declined individual recording', 'info')
+      })
+      .catch((error) => alertRecordingError(error))
+  }
+  bar.querySelector('#consent-accept').onclick = () => respond(true)
+  bar.querySelector('#consent-decline').onclick = () => respond(false)
+}
+
+function hideConsentPrompt() {
+  const bar = document.querySelector('#recording-consent')
+  if (bar) bar.remove()
+}
+
 // Fires for every participant whenever the recording state changes
 zmClient.on('recording-change', (payload) => {
   console.log('recording-change', payload)
+  if (payload.state === 'Ask') {
+    showConsentPrompt()
+    return
+  }
+  if (payload.state === 'Accept' || payload.state === 'Decline') {
+    // Another user's consent response (host sees these) — just log it
+    console.log('individual recording consent:', payload)
+    return
+  }
+  hideConsentPrompt()
   updateRecordingUI(payload.state)
   if (payload.state === 'Recording') toast('Cloud recording is on', 'info')
   if (payload.state === 'Stopped') toast('Recording stopped — it will appear in your Video SDK account once processed', 'info')
@@ -330,6 +376,7 @@ function leaveSession() {
   zmClient.leave()
   clearAllVideo()
   recordingClient = null
+  hideConsentPrompt()
   updateRecordingUI('Stopped')
 
   document.querySelector('#session').style.display = 'none'
