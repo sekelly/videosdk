@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Video SDK JS 2.5.0</title>
     <link rel="stylesheet" href="styles.css">
-    <meta http-equiv="origin-trial" content="AkBC6T2NnosY6N71LXXA09Q1GMiLzuHuOKpC9SwfbPxzoxr2PMOM2uHZmAxIFqq+dCvUD/4kPoylRZ4G5YCkow8AAAB7eyJvcmlnaW4iOiJodHRwczovL3Nla2VsbHkuZ2l0aHViLmlvOjQ0MyIsImZlYXR1cmUiOiJVbnJlc3RyaWN0ZWRTaGFyZWRBcnJheUJ1ZmZlciIsImV4cGlyeSI6MTcwOTg1NTk5OSwiaXNTdWJkb21haW4iOnRydWV9" />
   </head>
     <style>
     body {
@@ -28,12 +27,11 @@
       <div id="session">
         <div class="self">
           <h3 id="self-view-name">😃 Me</h3>
-          <video id="self-view-video" width="1920" height="1080"></video>
-          <canvas id="self-view-canvas" width="1920" height="1080"></canvas>
+          <video-player-container id="self-view-container"></video-player-container>
         </div>
         <div class="participant">
           <h3 id="participant-name">⏳ Waiting for participant to join...</h3>
-          <canvas id="participant-canvas" width="1920" height="1080"></canvas>
+          <video-player-container id="participant-container"></video-player-container>
         </div>
 
         <div class="controls">
@@ -54,3 +52,4 @@
     <script type="text/javascript" src="scripts.js"></script>
   </body>
 </html>
+
