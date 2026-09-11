@@ -92,7 +92,7 @@ small.zoom {
 }
 
 #session, #muteAudio, #unmuteAudio, #stopVideo,
-#startRecording, #pauseRecording, #resumeRecording, #stopRecording, #recording-indicator {
+#startRecording, #pauseRecording, #resumeRecording, #stopRecording, #recording-indicator, #endSession {
   display: none;
 }
 
@@ -216,8 +216,10 @@ a {
 #toast.info {
   background-color: #118AB2;
 }
- 
- 
+
+.end {
+  background-color: #8b0000;
+}
 
 
 
