@@ -20,6 +20,10 @@
         <input type="text" placeholder="😃 Enter Name" id="userName">
         <input type="text" placeholder="🚪 Session Name" id="sessionName">
         <input type="text" placeholder="🔑 Session Passcode" id="sessionPasscode">
+        <select id="role">
+          <option value="1">👑 Join as Host</option>
+          <option value="0">🙋 Join as Participant</option>
+        </select>
         <button onClick="getSignature()" class="primary" id="getSignature">Join Session</button>
         <small class="zoom">Powered by the <a href="https://marketplace.zoom.us/docs/sdk/video/introduction/" target="_blank">Zoom Video SDK</a></small>
       </div>
@@ -60,6 +64,3 @@
     <script type="text/javascript" src="scripts.js"></script>
   </body>
 </html>
-
-
-
